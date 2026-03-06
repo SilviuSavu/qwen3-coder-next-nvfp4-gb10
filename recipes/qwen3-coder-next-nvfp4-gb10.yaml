@@ -11,6 +11,10 @@ model: saricles/Qwen3-Coder-Next-NVFP4-GB10
 # Container image to use (built from Dockerfile.nvfp4)
 container: vllm-node-nvfp4
 
+# Patches: Triton int64 strides (perf), Triton allocator, gate quant fix
+mods:
+  - mods/fix-qwen3-coder-next
+
 # Default settings (can be overridden via CLI)
 defaults:
   port: 8000
@@ -34,11 +38,10 @@ command: |
     --gpu-memory-utilization {gpu_memory_utilization} \
     --host {host} \
     --port {port} \
+    --load-format fastsafetensors \
     --dtype bfloat16 \
     --attention-backend flashinfer \
     --enable-prefix-caching \
-    --enable-chunked-prefill \
     --max-model-len {max_model_len} \
-    --max-num-batched-tokens 8192 \
-    --max-num-seqs 64 \
+    --max-num-batched-tokens 16384 \
     -tp {tensor_parallel}
