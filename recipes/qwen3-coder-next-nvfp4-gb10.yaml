@@ -8,20 +8,23 @@ description: vLLM serving Qwen3-Coder-Next with NVFP4 quantization (GB10-tuned, 
 # HuggingFace model to download (optional, for --download-model)
 model: saricles/Qwen3-Coder-Next-NVFP4-GB10
 
-# Container image to use
-container: vllm-node
+# Container image to use (built from Dockerfile.nvfp4)
+container: vllm-node-nvfp4
 
 # Default settings (can be overridden via CLI)
 defaults:
   port: 8000
   host: 0.0.0.0
   tensor_parallel: 1
-  gpu_memory_utilization: 0.90
+  gpu_memory_utilization: 0.85
   max_model_len: 200000
 
-# Environment variables
+# Environment variables (per model card)
 env:
   VLLM_NVFP4_GEMM_BACKEND: "marlin"
+  VLLM_TEST_FORCE_FP8_MARLIN: "1"
+  VLLM_USE_FLASHINFER_MOE_FP4: "0"
+  VLLM_MARLIN_USE_ATOMIC_ADD: "1"
 
 # The vLLM serve command template
 command: |
@@ -34,6 +37,8 @@ command: |
     --dtype bfloat16 \
     --attention-backend flashinfer \
     --enable-prefix-caching \
+    --enable-chunked-prefill \
     --max-model-len {max_model_len} \
-    --max-num-batched-tokens 16384 \
+    --max-num-batched-tokens 8192 \
+    --max-num-seqs 64 \
     -tp {tensor_parallel}

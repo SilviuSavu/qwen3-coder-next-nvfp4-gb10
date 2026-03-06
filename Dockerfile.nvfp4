@@ -1,0 +1,21 @@
+# NVFP4-optimized container for Qwen3-Coder-Next
+# Based on avarok's NVFP4 kernel image, upgraded with latest vLLM and FlashInfer
+
+FROM avarok/dgx-vllm-nvfp4-kernel:v23
+
+ENV PIP_BREAK_SYSTEM_PACKAGES=1
+
+# Upgrade to latest vLLM and FlashInfer wheels
+COPY wheels/ /tmp/wheels/
+RUN pip install --force-reinstall /tmp/wheels/*.whl && rm -rf /tmp/wheels/
+
+# Architecture targets
+ENV TORCH_CUDA_ARCH_LIST="12.1a"
+ENV FLASHINFER_CUDA_ARCH_LIST="12.1a"
+ENV TRITON_PTXAS_PATH=/usr/local/cuda/bin/ptxas
+
+# Copy cluster support script
+COPY run-cluster-node.sh /workspace/vllm/
+RUN chmod +x /workspace/vllm/run-cluster-node.sh
+
+WORKDIR /workspace/vllm
