@@ -1,0 +1,39 @@
+# Recipe: Qwen3-Coder-Next-NVFP4-GB10
+# saricles GB10-tuned NVFP4 quantization — Marlin backend for 512 experts
+
+recipe_version: "1"
+name: Qwen3-Coder-Next-NVFP4-GB10
+description: vLLM serving Qwen3-Coder-Next with NVFP4 quantization (GB10-tuned, Marlin backend)
+
+# HuggingFace model to download (optional, for --download-model)
+model: saricles/Qwen3-Coder-Next-NVFP4-GB10
+
+# Container image to use
+container: vllm-node
+
+# Default settings (can be overridden via CLI)
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  gpu_memory_utilization: 0.90
+  max_model_len: 200000
+
+# Environment variables
+env:
+  VLLM_NVFP4_GEMM_BACKEND: "marlin"
+
+# The vLLM serve command template
+command: |
+  vllm serve saricles/Qwen3-Coder-Next-NVFP4-GB10 \
+    --enable-auto-tool-choice \
+    --tool-call-parser qwen3_coder \
+    --gpu-memory-utilization {gpu_memory_utilization} \
+    --host {host} \
+    --port {port} \
+    --dtype bfloat16 \
+    --attention-backend flashinfer \
+    --enable-prefix-caching \
+    --max-model-len {max_model_len} \
+    --max-num-batched-tokens 16384 \
+    -tp {tensor_parallel}
